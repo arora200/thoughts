@@ -1,0 +1,224 @@
+/* styles.css */
+:root {
+    --color-bg: #f7f7f7;
+    --color-text: #333;
+    --color-primary: #4CAF50;
+    --color-secondary: #555;
+    --font-main: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-main);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+    padding: 0.5rem 0; /* Reduced vertical padding, horizontal padding handled by container */
+}
+
+header .container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Align items to the start */
+    /* The container class already has max-width and padding */
+}
+
+header .header-content {
+    text-align: left;
+    margin-left: 2rem; /* Maintain spacing from logo */
+}
+
+footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid #ddd;
+    background-color: #fff;
+}
+
+.social-links a {
+    color: var(--color-primary);
+    text-decoration: none;
+    margin: 0 0.5rem;
+}
+
+.social-links a:hover {
+    text-decoration: underline;
+}
+
+h1 {
+    font-weight: 300;
+    letter-spacing: 1px;
+    font-size: 1.5em;
+    margin: 0;
+}
+
+header p {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--color-secondary);
+}
+
+.logo {
+    max-width: 100px;
+    /* No margin-right needed here, spacing handled by header-content margin-left */
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.thought {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    transition: box-shadow 0.3s ease, background-color 0.5s ease;
+    position: relative;
+}
+
+.thought:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.thought.highlight {
+    background-color: #e8f5e9; /* A light green highlight */
+}
+
+.thought-header {
+    text-align: right;
+    margin-bottom: 1rem;
+}
+
+.date {
+    font-size: 0.9em;
+    color: var(--color-secondary);
+}
+
+.text-block blockquote {
+    font-family: var(--font-mono);
+    font-size: 1.1em;
+    margin-bottom: 1rem;
+    color: var(--color-primary);
+    border-left: 3px solid var(--color-primary);
+    padding-left: 1rem;
+    margin-left: 0;
+}
+
+.author {
+    font-style: italic;
+    text-align: right;
+    color: var(--color-secondary);
+    margin-top: 1rem;
+}
+
+.read-more {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.keyword-link {
+    color: var(--color-primary);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.pagination {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.pagination button {
+    background-color: var(--color-primary);
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin: 0 0.25rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.pagination button:hover {
+    background-color: #45a049;
+}
+
+.pagination button.active {
+    background-color: #45a049;
+}
+
+.share-buttons {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.share-btn {
+    background-color: var(--color-secondary);
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin: 0 0.25rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.share-btn:hover {
+    background-color: #444;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 700px;
+    border-radius: 5px;
+    position: relative;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+time {
+    font-style: italic;
+    font-size: 0.9em;
+    color: var(--color-secondary);
+}
