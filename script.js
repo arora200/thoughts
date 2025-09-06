@@ -6,38 +6,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeButton = document.querySelector('.close-button');
 
     let thoughts = [];
-    let keywordMap = {};
     let currentPage = 1;
     const thoughtsPerPage = 5;
 
+    
+
     fetch('thoughts.json')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             thoughts = data.map((thought, index) => ({ ...thought, id: index }));
-            createKeywordMap();
             displayThoughts(currentPage);
             setupPagination();
+        })
+        .catch(error => {
+            console.error('Error fetching thoughts:', error);
+            thoughtsContainer.innerHTML = '<p>Failed to load thoughts. Please try again later.</p>';
         });
 
-    function createKeywordMap() {
-        thoughts.forEach(thought => {
-            thought.keywords.forEach(keyword => {
-                keywordMap[keyword.toLowerCase()] = thought.id;
-            });
-        });
-    }
-
-    function linkKeywords(text, currentThoughtId) {
-        let linkedText = text;
-        for (const keyword in keywordMap) {
-            const thoughtId = keywordMap[keyword];
-            if (thoughtId !== currentThoughtId) { // Don't link to the same thought
-                const regex = new RegExp(`\b(${keyword})\b`, 'gi');
-                linkedText = linkedText.replace(regex, `<a href="#" class="keyword-link" data-thought-id="${thoughtId}">$1</a>`);
-            }
-        }
-        return linkedText;
-    }
+    
 
     function displayThoughts(page) {
         thoughtsContainer.innerHTML = '';
@@ -51,34 +42,30 @@ document.addEventListener('DOMContentLoaded', function() {
             const thoughtElement = document.createElement('section');
             thoughtElement.classList.add('thought');
             thoughtElement.id = `thought-${thought.id}`;
-            const linkedExplanation = thought.explanation; // Use raw explanation
+            const explanation = thought.explanation;
 
-            thoughtElement.innerHTML = "`" +
-                `                <div class=\"thought-header\">
-                    <span class=\"date\">${thought.date}</span>
+            thoughtElement.innerHTML = `
+                <div class="thought-header">
+                    <span class="date">${thought.date}</span>
                 </div>
-                <div class=\"text-block\">
-                    <blockquote>\"${thought.quote}\"</blockquote>
-                    <p class=\"author\">- ${thought.author}</p>
+                <div class="text-block">
+                    <blockquote>"${sanitizeHTML(thought.quote)}"</blockquote>
+                    <p class="author">- ${sanitizeHTML(thought.author)}</p>
                 </div>
-                <div class=\"explanation\">
-                    <p>${linkedExplanation}</p>
+                <div class="explanation">
+                    <p>${explanation}</p>
                 </div>
-                <div class=\"share-buttons\">
-                    <button class=\"share-btn twitter-share\" data-quote=\"${thought.quote}\">Share on X</button>
-                    <button class=\"share-btn linkedin-share\" data-quote=\"${thought.quote}\">Share on LinkedIn</button>
-                    <button class=\"share-btn facebook-share\" data-quote=\"${thought.quote}\">Share on Facebook</button>
-                    <button class=\"share-btn copy-quote\" data-quote=\"${thought.quote}\">Copy Quote</button>
+                <div class="share-buttons">
+                    <button class="share-btn twitter-share" data-quote="${sanitizeHTML(thought.quote)}">Share on X</button>
+                    <button class="share-btn linkedin-share" data-quote="${sanitizeHTML(thought.quote)}">Share on LinkedIn</button>
+                    <button class="share-btn facebook-share" data-quote="${sanitizeHTML(thought.quote)}">Share on Facebook</button>
+                    <button class="share-btn copy-quote" data-quote="${sanitizeHTML(thought.quote)}">Copy Quote</button>
                 </div>
             `;
             thoughtsContainer.appendChild(thoughtElement);
         });
 
         // Add event listeners for the new links
-        document.querySelectorAll('.keyword-link').forEach(link => {
-            link.addEventListener('click', handleKeywordClick);
-        });
-
         document.querySelectorAll('.read-more').forEach(link => {
             link.addEventListener('click', function(event) {
                 event.preventDefault();
@@ -125,42 +112,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function handleKeywordClick(event) {
-        event.preventDefault();
-        const thoughtId = parseInt(this.getAttribute('data-thought-id'));
-        const thoughtPage = Math.floor(thoughtId / thoughtsPerPage) + 1;
-        
-        currentPage = thoughtPage;
-        displayThoughts(currentPage);
-        setupPagination();
-
-        // Scroll to the thought after a short delay to allow for rendering
-        setTimeout(() => {
-            const targetThought = document.getElementById(`thought-${thoughtId}`);
-            if (targetThought) {
-                targetThought.scrollIntoView({ behavior: 'smooth' });
-                targetThought.classList.add('highlight');
-                setTimeout(() => targetThought.classList.remove('highlight'), 2000);
-            }
-        }, 100);
-    }
-
     function openModal(thought) {
-        const linkedExplanation = linkKeywords(thought.explanation, thought.id);
-        modalBody.innerHTML = "`" +
-            `            <h2>${thought.quote}</h2>
-            <p class=\"author\">- ${thought.author}</p>
-            <p>${linkedExplanation}</p>
+        modalBody.innerHTML = `
+            <h2>${sanitizeHTML(thought.quote)}</h2>
+            <p class="author">- ${sanitizeHTML(thought.author)}</p>
+            <p>${sanitizeHTML(thought.explanation)}</p>
         `;
         modal.style.display = 'block';
+    }
 
-        // Add event listeners for keyword links inside the modal
-        modalBody.querySelectorAll('.keyword-link').forEach(link => {
-            link.addEventListener('click', function(event) {
-                closeModal();
-                handleKeywordClick.call(this, event);
-            });
-        });
+    function sanitizeHTML(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
     }
 
     function closeModal() {
@@ -190,5 +154,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             paginationContainer.appendChild(button);
         }
+    }
+
+    // Dynamically update the footer date
+    const currentYearElement = document.getElementById('current-year');
+    if (currentYearElement) {
+        currentYearElement.textContent = new Date().getFullYear();
     }
 });
