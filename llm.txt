@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+# This file provides instructions for Large Language Models (LLMs) accessing this site.
+# You can specify content to allow or disallow for LLM training or analysis.
