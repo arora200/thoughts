@@ -34,15 +34,55 @@ const navigator = { clipboard: { writeText: () => Promise.resolve() } };
 // In a real test setup (e.g., with Jest), you would import these functions.
 
 let thoughts = [];
+let filteredThoughts = []; // New variable for filtered results
 let currentPage = 1;
 const thoughtsPerPage = 5;
+let currentSearchQuery = '';
+let currentCategoryFilter = 'All'; // Default filter
 
-
+// Debounce function
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
 
 function sanitizeHTML(str) {
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
+}
+
+// Mock displayThoughts and setupPagination for filterThoughts
+let mockDisplayThoughtsCalledWith = [];
+let mockSetupPaginationCalled = false;
+
+function displayThoughts(page) {
+    mockDisplayThoughtsCalledWith.push(page);
+}
+
+function setupPagination() {
+    mockSetupPaginationCalled = true;
+}
+
+// Function to filter thoughts based on search query and category
+function filterThoughts() {
+    filteredThoughts = thoughts.filter(thought => {
+        const matchesSearch = thought.quote.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+                              thought.explanation.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+                              thought.author.toLowerCase().includes(currentSearchQuery.toLowerCase());
+
+        const matchesCategory = currentCategoryFilter === 'All' ||
+                                (thought.category && thought.category.toLowerCase() === currentCategoryFilter.toLowerCase());
+
+        return matchesSearch && matchesCategory;
+    });
+    currentPage = 1; // Reset to first page on filter/search
+    displayThoughts(currentPage);
+    setupPagination();
 }
 
 
@@ -85,27 +125,43 @@ const mockThoughts = [
         quote: "Quote 1",
         author: "Author 1",
         date: "Date 1",
-        explanation: "Explanation for quote 1 with keyword thinking."
+        explanation: "Explanation for quote 1 with keyword thinking.",
+        category: "Philosophy"
     },
     {
         id: 1,
         quote: "Quote 2",
         author: "Author 2",
         date: "Date 2",
-        explanation: "Explanation for quote 2 about patterns."
+        explanation: "Explanation for quote 2 about patterns.",
+        category: "Science"
     },
     {
         id: 2,
         quote: "Quote 3",
         author: "Author 3",
         date: "Date 3",
-        explanation: "Another explanation with thinking and patterns."
+        explanation: "Another explanation with thinking and patterns.",
+        category: "Life"
+    },
+    {
+        id: 3,
+        quote: "A fourth quote about philosophy.",
+        author: "Author 4",
+        date: "Date 4",
+        explanation: "More philosophical thoughts.",
+        category: "Philosophy"
     }
 ];
 
 describe('JavaScript Unit Tests', () => {
     beforeEach(() => {
         thoughts = [...mockThoughts];
+        filteredThoughts = [];
+        currentSearchQuery = '';
+        currentCategoryFilter = 'All';
+        mockDisplayThoughtsCalledWith = [];
+        mockSetupPaginationCalled = false;
     });
 
     it('should generate correct HTML for thoughts', () => {
@@ -145,5 +201,131 @@ describe('JavaScript Unit Tests', () => {
 
         // Restore original getElementById
         document.getElementById = originalGetElementById;
+    });
+
+    describe('Search Functionality', () => {
+        beforeEach(() => {
+            thoughts = [...mockThoughts];
+            filteredThoughts = [];
+            currentSearchQuery = '';
+            currentCategoryFilter = 'All';
+            mockDisplayThoughtsCalledWith = [];
+            mockSetupPaginationCalled = false;
+        });
+
+        it('should filter thoughts by quote', () => {
+            currentSearchQuery = 'Quote 1';
+            filterThoughts();
+            expect(filteredThoughts.length).toBe(1);
+            expect(filteredThoughts[0].id).toBe(0);
+        });
+
+        it('should filter thoughts by explanation', () => {
+            currentSearchQuery = 'patterns';
+            filterThoughts();
+            expect(filteredThoughts.length).toBe(2);
+            expect(filteredThoughts[0].id).toBe(1);
+        });
+
+        it('should filter thoughts by author', () => {
+            currentSearchQuery = 'Author 3';
+            filterThoughts();
+            expect(filteredThoughts.length).toBe(1);
+            expect(filteredThoughts[0].id).toBe(2);
+        });
+
+        it('should be case-insensitive', () => {
+            currentSearchQuery = 'quote 1';
+            filterThoughts();
+            expect(filteredThoughts.length).toBe(1);
+            expect(filteredThoughts[0].id).toBe(0);
+        });
+
+        it('should return all thoughts if search query is empty', () => {
+            currentSearchQuery = '';
+            filterThoughts();
+            expect(filteredThoughts.length).toBe(mockThoughts.length);
+        });
+
+        it('should call displayThoughts and setupPagination', () => {
+            currentSearchQuery = 'Quote 1';
+            filterThoughts();
+            expect(mockDisplayThoughtsCalledWith).toEqual([1]);
+            expect(mockSetupPaginationCalled).toBe(true);
+        });
+    });
+
+    describe('Category Filtering', () => {
+        beforeEach(() => {
+            thoughts = [...mockThoughts];
+            filteredThoughts = [];
+            currentSearchQuery = '';
+            currentCategoryFilter = 'All';
+            mockDisplayThoughtsCalledWith = [];
+            mockSetupPaginationCalled = false;
+        });
+
+        it('should filter thoughts by category', () => {
+            currentCategoryFilter = 'Philosophy';
+            filterThoughts();
+            expect(filteredThoughts.length).toBe(2);
+            expect(filteredThoughts[0].id).toBe(0);
+            expect(filteredThoughts[1].id).toBe(3);
+        });
+
+        it('should be case-insensitive for category filtering', () => {
+            currentCategoryFilter = 'philosophy';
+            filterThoughts();
+            expect(filteredThoughts.length).toBe(2);
+            expect(filteredThoughts[0].id).toBe(0);
+            expect(filteredThoughts[1].id).toBe(3);
+        });
+
+        it('should return all thoughts if category filter is "All"', () => {
+            currentCategoryFilter = 'All';
+            filterThoughts();
+            expect(filteredThoughts.length).toBe(mockThoughts.length);
+        });
+
+        it('should call displayThoughts and setupPagination', () => {
+            currentCategoryFilter = 'Science';
+            filterThoughts();
+            expect(mockDisplayThoughtsCalledWith).toEqual([1]);
+            expect(mockSetupPaginationCalled).toBe(true);
+        });
+    });
+
+    describe('Combined Search and Category Filtering', () => {
+        beforeEach(() => {
+            thoughts = [...mockThoughts];
+            filteredThoughts = [];
+            currentSearchQuery = '';
+            currentCategoryFilter = 'All';
+            mockDisplayThoughtsCalledWith = [];
+            mockSetupPaginationCalled = false;
+        });
+
+        it('should filter by search query and category', () => {
+            currentSearchQuery = 'thinking';
+            currentCategoryFilter = 'Philosophy';
+            filterThoughts();
+            expect(filteredThoughts.length).toBe(1);
+            expect(filteredThoughts[0].id).toBe(0);
+        });
+
+        it('should return no results if no match for combined filters', () => {
+            currentSearchQuery = 'nonexistent';
+            currentCategoryFilter = 'Philosophy';
+            filterThoughts();
+            expect(filteredThoughts.length).toBe(0);
+        });
+
+        it('should call displayThoughts and setupPagination', () => {
+            currentSearchQuery = 'patterns';
+            currentCategoryFilter = 'Science';
+            filterThoughts();
+            expect(mockDisplayThoughtsCalledWith).toEqual([1]);
+            expect(mockSetupPaginationCalled).toBe(true);
+        });
     });
 });

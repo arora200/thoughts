@@ -41,8 +41,25 @@
         </div>
     </header>
 
-    <main class="container" id="thoughts-container">
-        <!-- Thoughts will be loaded here dynamically -->
+    <main class="container content-area">
+        <aside class="filter-sidebar" id="filter-sidebar">
+            <h2>Filters</h2>
+            <div class="search-filter-container">
+                <input type="text" id="search-input" placeholder="Search thoughts...">
+                <h3>Categories</h3>
+                <div id="category-filters">
+                    <!-- Category filter buttons will be dynamically loaded here -->
+                </div>
+            </div>
+        </aside>
+        <div id="thoughts-content"> <!-- New container for thoughts and pagination -->
+            <div id="thoughts-container">
+                <!-- Thoughts will be loaded here dynamically -->
+            </div>
+            <div class="pagination" id="pagination-container">
+                <!-- Pagination controls will be loaded here dynamically -->
+            </div>
+        </div>
     </main>
 
     <div class="pagination" id="pagination-container">

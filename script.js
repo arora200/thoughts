@@ -4,10 +4,42 @@ document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modal-body');
     const closeButton = document.querySelector('.close-button');
+    const searchInput = document.getElementById('search-input');
+    const categoryFiltersContainer = document.getElementById('category-filters');
 
     let thoughts = [];
+    let filteredThoughts = []; // New variable for filtered results
     let currentPage = 1;
     const thoughtsPerPage = 5;
+    let currentSearchQuery = '';
+    let currentCategoryFilter = 'All'; // Default filter
+
+    // Debounce function
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
+
+    // Function to filter thoughts based on search query and category
+    function filterThoughts() {
+        filteredThoughts = thoughts.filter(thought => {
+            const matchesSearch = thought.quote.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+                                  thought.explanation.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+                                  thought.author.toLowerCase().includes(currentSearchQuery.toLowerCase());
+
+            const matchesCategory = currentCategoryFilter === 'All' ||
+                                    (thought.category && thought.category.toLowerCase() === currentCategoryFilter.toLowerCase());
+
+            return matchesSearch && matchesCategory;
+        });
+        currentPage = 1; // Reset to first page on filter/search
+        displayThoughts(currentPage);
+        setupPagination();
+    }
 
     
 
@@ -20,6 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             thoughts = data.map((thought, index) => ({ ...thought, id: index }));
+            filteredThoughts = [...thoughts]; // Initialize filteredThoughts
+            displayCategories(); // Display category filters
             displayThoughts(currentPage);
             setupPagination();
         })
@@ -28,7 +62,35 @@ document.addEventListener('DOMContentLoaded', function() {
             thoughtsContainer.innerHTML = '<p>Failed to load thoughts. Please try again later.</p>';
         });
 
-    
+    // Function to display category filter buttons
+    function displayCategories() {
+        const categories = ['All', ...new Set(thoughts.map(thought => thought.category).filter(Boolean))];
+        categoryFiltersContainer.innerHTML = ''; // Clear existing buttons
+
+        categories.forEach(category => {
+            const button = document.createElement('button');
+            button.textContent = category;
+            button.classList.add('category-filter-button');
+            if (category === currentCategoryFilter) {
+                button.classList.add('active');
+            }
+            button.addEventListener('click', () => {
+                currentCategoryFilter = category;
+                // Remove active class from all buttons
+                document.querySelectorAll('.category-filter-button').forEach(btn => btn.classList.remove('active'));
+                // Add active class to the clicked button
+                button.classList.add('active');
+                filterThoughts();
+            });
+            categoryFiltersContainer.appendChild(button);
+        });
+    }
+
+    // Attach event listener to search input
+    searchInput.addEventListener('input', debounce(() => {
+        currentSearchQuery = searchInput.value;
+        filterThoughts();
+    }, 300));
 
     function displayThoughts(page) {
         thoughtsContainer.innerHTML = '';
@@ -36,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const startIndex = pageIndex * thoughtsPerPage;
         const endIndex = startIndex + thoughtsPerPage;
-        const paginatedThoughts = thoughts.slice(startIndex, endIndex);
+        const paginatedThoughts = filteredThoughts.slice(startIndex, endIndex);
 
         paginatedThoughts.forEach(thought => {
             const thoughtElement = document.createElement('section');
@@ -139,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function setupPagination() {
-        const pageCount = Math.ceil(thoughts.length / thoughtsPerPage);
+        const pageCount = Math.ceil(filteredThoughts.length / thoughtsPerPage);
         paginationContainer.innerHTML = ''; // Clear existing buttons
         for (let i = 1; i <= pageCount; i++) {
             const button = document.createElement('button');
